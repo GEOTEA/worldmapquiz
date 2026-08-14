@@ -230,6 +230,100 @@
       outline: none;
     }
 
+    .help-btn {
+      position: fixed;
+      z-index: 1300;
+      right: max(22px, env(safe-area-inset-right));
+      bottom: max(22px, env(safe-area-inset-bottom));
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      padding: 0;
+      color: var(--navy);
+      background: rgba(255,255,255,.9);
+      border: 1px solid rgba(40,120,181,.2);
+      border-radius: 50%;
+      box-shadow: 0 8px 24px rgba(24,59,86,.16);
+      cursor: pointer;
+    }
+
+    .help-btn:hover,
+    .help-btn:focus-visible {
+      color: var(--blue);
+      background: var(--white);
+      outline: 3px solid rgba(40,120,181,.2);
+    }
+
+    .help-btn svg,
+    .nav-icon {
+      display: block;
+      width: 24px;
+      height: 24px;
+      flex: 0 0 auto;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .help-overlay {
+      position: fixed;
+      z-index: 2000;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      background: rgba(15, 42, 61, .48);
+      backdrop-filter: blur(3px);
+    }
+
+    .help-overlay.open { display: flex; }
+
+    .help-dialog {
+      position: relative;
+      width: min(480px, 100%);
+      padding: 30px 28px 26px;
+      text-align: left;
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 22px;
+      box-shadow: 0 22px 60px rgba(15,42,61,.28);
+    }
+
+    .help-dialog h2 {
+      margin: 0 42px 14px 0;
+      font-size: 24px;
+    }
+
+    .help-dialog p {
+      margin: 0;
+      color: var(--gray-500);
+      font-size: 16px;
+      line-height: 1.75;
+      word-break: keep-all;
+    }
+
+    .help-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      color: var(--navy);
+      background: var(--gray-100);
+      border: 1px solid var(--gray-200);
+      border-radius: 50%;
+      font-size: 25px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
     /* 지도 화면 */
     #gameScreen {
       position: relative;
@@ -252,6 +346,10 @@
 
     .home-btn,
     .reset-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
       min-height: 44px;
       padding: 0 15px;
       color: var(--navy);
@@ -483,12 +581,9 @@
       .reset-btn {
         width: 46px;
         padding: 0;
-        overflow: hidden;
-        font-size: 0;
       }
 
-      .home-btn::before { content: "⌂"; font-size: 24px; }
-      .reset-btn::before { content: "◎"; font-size: 21px; }
+      .button-label { display: none; }
 
       .stats {
         position: absolute;
@@ -590,8 +685,8 @@
 
       .topbar {
         grid-template-columns: 56px minmax(0, 1fr) 56px;
-        grid-template-rows: 52px auto auto;
-        gap: 7px 10px;
+        grid-template-rows: minmax(52px, auto) auto;
+        gap: 7px 9px;
         min-height: 0;
         padding: max(8px, env(safe-area-inset-top)) 10px 10px;
       }
@@ -602,40 +697,49 @@
         width: 56px;
         min-height: 52px;
         padding: 0;
-        overflow: hidden;
-        font-size: 0;
         border-radius: 15px;
       }
 
+      .button-label { display: none; }
+
       .home-btn { grid-column: 1; }
       .reset-btn { grid-column: 3; }
-      .home-btn::before { content: "⌂"; font-size: 27px; }
-      .reset-btn::before { content: "◎"; font-size: 24px; }
+
+      .nav-icon {
+        width: 27px;
+        height: 27px;
+      }
 
       .mission {
-        grid-column: 1 / -1;
-        grid-row: 2;
-        padding: 3px 4px 5px;
+        grid-column: 2;
+        grid-row: 1;
+        align-self: center;
+        padding: 0;
       }
 
       #modeLabel {
-        margin-bottom: 5px;
-        font-size: 13px;
+        margin-bottom: 2px;
+        font-size: 11px;
       }
 
       #missionText {
-        overflow: visible;
-        font-size: clamp(20px, 5.4vw, 29px);
-        line-height: 1.28;
-        text-overflow: clip;
+        display: -webkit-box;
+        overflow: hidden;
+        font-size: clamp(15px, 4.3vw, 21px);
+        line-height: 1.22;
+        text-overflow: ellipsis;
         white-space: normal;
+        word-break: keep-all;
+        overflow-wrap: anywhere;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
       }
 
       .stats,
       .stats.show {
         position: static;
         grid-column: 1 / -1;
-        grid-row: 3;
+        grid-row: 2;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         width: 100%;
         gap: 8px;
@@ -687,6 +791,17 @@
       }
 
       .score-number { font-size: 58px; }
+
+      .help-btn {
+        right: max(18px, env(safe-area-inset-right));
+        bottom: max(18px, env(safe-area-inset-bottom));
+        width: 48px;
+        height: 48px;
+      }
+
+      .help-dialog {
+        padding: 27px 23px 23px;
+      }
     }
 
     /* 태블릿 세로 화면에서는 카드와 지도 안내를 조금 더 넉넉하게 표시 */
@@ -716,7 +831,7 @@
         width: 68px;
       }
 
-      #missionText { font-size: 30px; }
+      #missionText { font-size: clamp(19px, 3vw, 25px); }
       .stat-chip strong { font-size: 22px; }
       #feedbackText { font-size: 18px; }
     }
@@ -764,18 +879,54 @@
         >✉ 개발자에게 의견 보내기</a>
       </footer>
     </div>
+
+    <button
+      id="helpButton"
+      class="help-btn"
+      type="button"
+      aria-label="도움말 열기"
+      aria-controls="helpOverlay"
+      aria-expanded="false"
+      onclick="openHelp()"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M9.8 9a2.4 2.4 0 0 1 4.6 1c0 1.8-2.4 2.1-2.4 3.7"></path>
+        <path d="M12 17.4h.01"></path>
+      </svg>
+    </button>
   </main>
+
+  <div id="helpOverlay" class="help-overlay" aria-hidden="true" onclick="handleHelpBackdrop(event)">
+    <section class="help-dialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <button class="help-close" type="button" aria-label="도움말 닫기" onclick="closeHelp()">×</button>
+      <h2 id="helpTitle">지도 안내</h2>
+      <p>지도에서 음영으로 표시된 국가는 교과서에 국가명이 제시되지 않은 곳입니다. 음영 없이 표시된 68개국은 천재교과서 『중학 사회①』에 제시된 국가를 기준으로 선정했습니다.</p>
+    </section>
+  </div>
 
   <section id="gameScreen" class="screen">
     <header class="topbar">
-      <button class="home-btn" type="button" onclick="goHome()">⌂ 메인</button>
+      <button class="home-btn" type="button" aria-label="메인 화면으로 이동" onclick="goHome()">
+        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3.5 10.5 12 3l8.5 7.5"></path>
+          <path d="M5.5 9.5V21h13V9.5"></path>
+        </svg>
+        <span class="button-label">메인</span>
+      </button>
 
       <div class="mission">
         <p id="modeLabel">학습하기</p>
         <p id="missionText">학습할 국가를 클릭해 보세요.</p>
       </div>
 
-      <button class="reset-btn" type="button" onclick="resetMapView()">◎ 전체 보기</button>
+      <button class="reset-btn" type="button" aria-label="세계지도 전체 보기" onclick="resetMapView()">
+        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="8.5"></circle>
+          <circle cx="12" cy="12" r="4.5"></circle>
+        </svg>
+        <span class="button-label">전체 보기</span>
+      </button>
 
       <div id="stats" class="stats" aria-label="도전 현황">
         <div class="stat-chip"><span>문제</span><strong id="questionStat">1/10</strong></div>
@@ -846,6 +997,7 @@
     let score = 0;
     let answerLocked = false;
     let nextQuestionTimer = null;
+    let helpPreviousFocus = null;
 
     window.addEventListener('DOMContentLoaded', loadGeoData);
 
@@ -891,6 +1043,29 @@
       document.querySelectorAll('.screen').forEach(function(screen) {
         screen.classList.toggle('active', screen.id === screenId);
       });
+    }
+
+    function openHelp() {
+      const overlay = document.getElementById('helpOverlay');
+      const button = document.getElementById('helpButton');
+      helpPreviousFocus = document.activeElement;
+      overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden', 'false');
+      button.setAttribute('aria-expanded', 'true');
+      document.querySelector('.help-close').focus();
+    }
+
+    function closeHelp() {
+      const overlay = document.getElementById('helpOverlay');
+      const button = document.getElementById('helpButton');
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden', 'true');
+      button.setAttribute('aria-expanded', 'false');
+      if (helpPreviousFocus) helpPreviousFocus.focus();
+    }
+
+    function handleHelpBackdrop(event) {
+      if (event.target.id === 'helpOverlay') closeHelp();
     }
 
     function ensureMap() {
@@ -1028,7 +1203,7 @@
 
       const targetName = currentTarget.properties.nameKo;
       renderChallengeMission(targetName);
-      setFeedback('지도를 직접 확대하거나 이동하여 정답 국가를 클릭하세요.', '');
+      setFeedback('지도를 확대하거나 이동하여 정답을 클릭하세요.', '');
     }
 
     function renderChallengeMission(targetName) {
@@ -1246,6 +1421,12 @@
         map.invalidateSize();
         resetMapView();
       }, 300);
+    });
+
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape' && document.getElementById('helpOverlay').classList.contains('open')) {
+        closeHelp();
+      }
     });
   </script>
 </body>
