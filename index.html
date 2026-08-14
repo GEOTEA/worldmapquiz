@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ㅅㅈㅋㅋ</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
+
+  <style>
+    :root {
+      --navy: #183b56;
+      --blue: #2878b5;
+      --light-blue: #eaf5fc;
+      --ocean: #d9f0fa;
+      --green: #228b52;
+      --red: #d34444;
+      --yellow: #f5b83d;
+      --white: #ffffff;
+      --gray-100: #f5f8fa;
+      --gray-200: #e3ebf0;
+      --gray-500: #698091;
+      --shadow: 0 14px 36px rgba(24, 59, 86, 0.16);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      min-height: 100dvh;
+      margin: 0;
+      overflow: hidden;
+      font-family: Pretendard, "Noto Sans KR", "맑은 고딕", sans-serif;
+      color: var(--navy);
+      background: var(--light-blue);
+    }
+
+    button { font: inherit; }
+
+    .screen {
+      display: none;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+    }
+
+    .screen.active { display: flex; }
+
+    /* 로딩 */
+    #loadingScreen {
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: linear-gradient(145deg, #eaf6fd, #dceff9);
+    }
+
+    .loading-card {
+      width: min(440px, 100%);
+      padding: 34px;
+      text-align: center;
+      background: var(--white);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 18px;
+      border: 5px solid #d8e8f2;
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.85s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #loadingMessage {
+      margin: 0;
+      line-height: 1.6;
+      color: var(--gray-500);
+    }
+
+    #loadingMessage.error {
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    /* 메인 화면 */
+    #menuScreen {
+      position: relative;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+      overflow-y: auto;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(255,255,255,.9) 0 7%, transparent 8%),
+        radial-gradient(circle at 84% 76%, rgba(255,255,255,.6) 0 9%, transparent 10%),
+        linear-gradient(145deg, #eaf6fd, #cfeaf7);
+    }
+
+    .menu-wrap {
+      width: min(900px, 100%);
+      text-align: center;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      color: var(--blue);
+    }
+
+    .main-title {
+      margin: 0;
+      font-family: "Jua", "Noto Sans KR", "맑은 고딕", sans-serif;
+      font-size: clamp(46px, 8vw, 76px);
+      font-weight: 400;
+      line-height: 1.12;
+      letter-spacing: -.02em;
+      text-shadow: 0 4px 0 rgba(255,255,255,.9);
+    }
+
+    .title-pop {
+      color: #f06f4f;
+    }
+
+    .title-rest {
+      color: #2474a6;
+    }
+
+    .main-desc {
+      margin: 16px 0 30px;
+      font-size: clamp(15px, 2vw, 19px);
+      color: var(--gray-500);
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .mode-card {
+      min-height: 240px;
+      padding: 28px;
+      text-align: left;
+      color: var(--navy);
+      background: rgba(255,255,255,.94);
+      border: 2px solid rgba(40,120,181,.12);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .mode-card:hover,
+    .mode-card:focus-visible {
+      transform: translateY(-5px);
+      border-color: var(--blue);
+      box-shadow: 0 18px 44px rgba(24,59,86,.22);
+      outline: none;
+    }
+
+    .mode-icon {
+      display: grid;
+      place-items: center;
+      width: 58px;
+      height: 58px;
+      margin-bottom: 20px;
+      font-size: 30px;
+      background: var(--light-blue);
+      border-radius: 18px;
+    }
+
+    .mode-card.challenge .mode-icon { background: #fff3d8; }
+
+    .mode-number {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--blue);
+    }
+
+    .mode-card h2 {
+      margin: 0 0 10px;
+      font-size: 28px;
+    }
+
+    .mode-card p {
+      margin: 0;
+      line-height: 1.65;
+      color: var(--gray-500);
+    }
+
+    .menu-footer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      margin-top: 24px;
+      color: var(--gray-500);
+      font-size: 13px;
+    }
+
+    .feedback-mail {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 0 14px;
+      color: var(--navy);
+      text-decoration: none;
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(40,120,181,.18);
+      border-radius: 999px;
+      font-weight: 800;
+      transition: background .18s ease, border-color .18s ease;
+    }
+
+    .feedback-mail:hover,
+    .feedback-mail:focus-visible {
+      background: var(--white);
+      border-color: var(--blue);
+      outline: none;
+    }
+
+    /* 지도 화면 */
+    #gameScreen {
+      position: relative;
+      flex-direction: column;
+      background: var(--ocean);
+    }
+
+    .topbar {
+      z-index: 1000;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 14px;
+      min-height: 76px;
+      padding: 10px 16px;
+      background: rgba(255,255,255,.97);
+      border-bottom: 1px solid #c9d9e6;
+      box-shadow: 0 3px 12px rgba(24,59,86,.10);
+    }
+
+    .home-btn,
+    .reset-btn {
+      min-height: 44px;
+      padding: 0 15px;
+      color: var(--navy);
+      background: var(--gray-100);
+      border: 1px solid var(--gray-200);
+      border-radius: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .home-btn:hover,
+    .reset-btn:hover { background: #e8f2f8; }
+
+    .mission {
+      min-width: 0;
+      text-align: center;
+    }
+
+    #modeLabel {
+      margin: 0 0 3px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      color: var(--blue);
+    }
+
+    #missionText {
+      margin: 0;
+      overflow: hidden;
+      font-size: clamp(17px, 2.6vw, 25px);
+      font-weight: 900;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .target-country {
+      color: #e46b20;
+      font-weight: 950;
+    }
+
+    #map {
+      flex: 1 1 auto;
+      width: 100%;
+      min-height: 0;
+      background: var(--ocean);
+    }
+
+    .stats {
+      position: absolute;
+      z-index: 950;
+      top: 86px;
+      right: 16px;
+      display: none;
+      grid-template-columns: repeat(3, auto);
+      gap: 7px;
+      box-shadow: 0 5px 16px rgba(24,59,86,.13);
+    }
+
+    .stats.show { display: grid; }
+
+    .stat-chip {
+      min-width: 70px;
+      padding: 6px 10px;
+      text-align: center;
+      background: var(--gray-100);
+      border-radius: 11px;
+    }
+
+    .stat-chip span {
+      display: block;
+      font-size: 11px;
+      color: var(--gray-500);
+    }
+
+    .stat-chip strong { font-size: 17px; }
+
+    .info-panel {
+      position: absolute;
+      z-index: 900;
+      left: 50%;
+      bottom: 20px;
+      width: min(620px, calc(100% - 28px));
+      padding: 14px 18px;
+      text-align: center;
+      background: rgba(255,255,255,.95);
+      border: 1px solid rgba(24,59,86,.12);
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(24,59,86,.16);
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    #feedbackText {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .feedback-success { color: var(--green); }
+    .feedback-error { color: var(--red); }
+
+    .toast {
+      position: absolute;
+      z-index: 1200;
+      top: 96px;
+      left: 50%;
+      padding: 13px 22px;
+      color: var(--white);
+      background: var(--green);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      font-weight: 900;
+      opacity: 0;
+      transform: translate(-50%, -12px);
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    /* 결과 화면 */
+    #resultScreen {
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-y: auto;
+      background: linear-gradient(145deg, #eaf6fd, #d8edf8);
+    }
+
+    .result-card {
+      width: min(540px, 100%);
+      padding: 34px;
+      text-align: center;
+      background: var(--white);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+    }
+
+    .result-emoji { font-size: 56px; }
+
+    .result-card h2 {
+      margin: 10px 0 4px;
+      font-size: 32px;
+    }
+
+    .score-number {
+      margin: 18px 0;
+      font-size: 64px;
+      font-weight: 950;
+      line-height: 1;
+      color: var(--blue);
+    }
+
+    .score-number small {
+      font-size: 20px;
+      color: var(--gray-500);
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin: 22px 0;
+    }
+
+    .result-box {
+      padding: 16px;
+      background: var(--gray-100);
+      border-radius: 15px;
+    }
+
+    .result-box span {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--gray-500);
+      font-size: 13px;
+    }
+
+    .result-box strong { font-size: 24px; }
+
+    .result-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+      min-height: 50px;
+      padding: 0 18px;
+      border-radius: 14px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .primary-btn {
+      color: var(--white);
+      background: var(--blue);
+      border: 0;
+    }
+
+    .secondary-btn {
+      color: var(--navy);
+      background: var(--gray-100);
+      border: 1px solid var(--gray-200);
+    }
+
+    @media (max-width: 700px) {
+      .mode-grid { grid-template-columns: 1fr; }
+      .mode-card { min-height: 190px; }
+
+      .menu-footer {
+        flex-direction: column;
+        gap: 9px;
+      }
+
+      .topbar {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 8px;
+        min-height: 68px;
+        padding: 8px;
+      }
+
+      .home-btn,
+      .reset-btn {
+        width: 46px;
+        padding: 0;
+        overflow: hidden;
+        font-size: 0;
+      }
+
+      .home-btn::before { content: "⌂"; font-size: 24px; }
+      .reset-btn::before { content: "◎"; font-size: 21px; }
+
+      .stats {
+        position: absolute;
+        z-index: 950;
+        top: 76px;
+        right: 8px;
+        grid-template-columns: repeat(3, auto);
+        box-shadow: 0 5px 16px rgba(24,59,86,.13);
+      }
+
+      .stat-chip {
+        min-width: 60px;
+        padding: 5px 7px;
+        background: rgba(255,255,255,.94);
+      }
+
+      .info-panel { bottom: 12px; }
+      .toast { top: 82px; }
+      .result-actions { grid-template-columns: 1fr; }
+    }
+
+    /* 세로 화면 전용 UI: 같은 링크에서 화면 방향에 따라 자동 적용 */
+    @media (orientation: portrait) {
+      #menuScreen {
+        align-items: flex-start;
+        padding: max(22px, env(safe-area-inset-top)) 18px max(22px, env(safe-area-inset-bottom));
+      }
+
+      .menu-wrap {
+        width: min(620px, 100%);
+        margin: auto;
+      }
+
+      .eyebrow {
+        margin-bottom: 6px;
+        font-size: 13px;
+      }
+
+      .main-title {
+        font-size: clamp(52px, 14vw, 82px);
+      }
+
+      .main-desc {
+        margin: 12px auto 22px;
+        font-size: clamp(16px, 4vw, 20px);
+        line-height: 1.55;
+      }
+
+      .mode-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .mode-card {
+        display: grid;
+        grid-template-columns: 92px 1fr;
+        grid-template-rows: auto auto 1fr;
+        column-gap: 18px;
+        min-height: 0;
+        padding: 22px;
+        border-radius: 22px;
+      }
+
+      .mode-icon {
+        grid-column: 1;
+        grid-row: 1 / 4;
+        align-self: center;
+        width: 88px;
+        height: 88px;
+        margin: 0;
+        font-size: 48px;
+        border-radius: 24px;
+      }
+
+      .mode-number,
+      .mode-card h2,
+      .mode-card p {
+        grid-column: 2;
+      }
+
+      .mode-card h2 {
+        margin-bottom: 5px;
+        font-size: 27px;
+      }
+
+      .mode-card p {
+        font-size: 15px;
+        line-height: 1.5;
+      }
+
+      .menu-footer {
+        margin-top: 18px;
+      }
+
+      .feedback-mail {
+        min-height: 44px;
+        padding: 0 18px;
+      }
+
+      .topbar {
+        grid-template-columns: 68px minmax(0, 1fr) 68px;
+        grid-template-rows: 60px auto auto;
+        gap: 9px 10px;
+        min-height: 0;
+        padding: max(10px, env(safe-area-inset-top)) 14px 12px;
+      }
+
+      .home-btn,
+      .reset-btn {
+        grid-row: 1;
+        width: 68px;
+        min-height: 60px;
+        padding: 0;
+        overflow: hidden;
+        font-size: 0;
+        border-radius: 18px;
+      }
+
+      .home-btn { grid-column: 1; }
+      .reset-btn { grid-column: 3; }
+      .home-btn::before { content: "⌂"; font-size: 31px; }
+      .reset-btn::before { content: "◎"; font-size: 28px; }
+
+      .mission {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        padding: 3px 4px 5px;
+      }
+
+      #modeLabel {
+        margin-bottom: 5px;
+        font-size: 14px;
+      }
+
+      #missionText {
+        overflow: visible;
+        font-size: clamp(27px, 7.2vw, 30px);
+        line-height: 1.28;
+        text-overflow: clip;
+        white-space: normal;
+      }
+
+      .stats,
+      .stats.show {
+        position: static;
+        grid-column: 1 / -1;
+        grid-row: 3;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        width: 100%;
+        gap: 8px;
+        box-shadow: none;
+      }
+
+      .stats { display: none; }
+      .stats.show { display: grid; }
+
+      .stat-chip {
+        min-width: 0;
+        padding: 10px 5px;
+        background: var(--gray-100);
+        border: 1px solid var(--gray-200);
+        border-radius: 12px;
+      }
+
+      .stat-chip span { font-size: 13px; }
+      .stat-chip strong { font-size: 22px; }
+
+      .info-panel {
+        bottom: max(12px, env(safe-area-inset-bottom));
+        width: calc(100% - 24px);
+        padding: 16px 14px;
+        border-radius: 17px;
+      }
+
+      #feedbackText {
+        font-size: 18px;
+        line-height: 1.5;
+      }
+
+      .leaflet-control-zoom a {
+        width: 48px !important;
+        height: 48px !important;
+        line-height: 48px !important;
+        font-size: 27px !important;
+      }
+
+      .toast {
+        top: auto;
+        bottom: 90px;
+        max-width: calc(100% - 30px);
+        text-align: center;
+      }
+
+      .result-card {
+        padding: 28px 22px;
+      }
+
+      .score-number { font-size: 58px; }
+    }
+
+    /* 아이폰 세로 화면: 태블릿과 비슷한 체감 크기가 되도록 별도 확대 */
+    @media (orientation: portrait) and (max-width: 700px) {
+      .main-title { font-size: clamp(64px, 18vw, 78px); }
+      .main-desc { font-size: 18px; }
+
+      .mode-card {
+        grid-template-columns: 108px 1fr;
+        column-gap: 20px;
+        padding: 24px 20px;
+      }
+
+      .mode-icon {
+        width: 104px;
+        height: 104px;
+        font-size: 56px;
+        border-radius: 27px;
+      }
+
+      .mode-card h2 { font-size: 30px; }
+      .mode-card p { font-size: 16px; }
+
+      .topbar {
+        grid-template-columns: 76px minmax(0, 1fr) 76px;
+        grid-template-rows: 68px auto auto;
+        padding-right: 14px;
+        padding-left: 14px;
+      }
+
+      .home-btn,
+      .reset-btn {
+        width: 76px;
+        min-height: 68px;
+        border-radius: 20px;
+      }
+
+      .home-btn::before { font-size: 35px; }
+      .reset-btn::before { font-size: 32px; }
+      #modeLabel { font-size: 16px; }
+      #missionText { font-size: clamp(34px, 9vw, 38px); }
+      .stat-chip { padding: 12px 5px; }
+      .stat-chip span { font-size: 14px; }
+      .stat-chip strong { font-size: 25px; }
+      #feedbackText { font-size: 20px; }
+
+      .leaflet-control-zoom a {
+        width: 54px !important;
+        height: 54px !important;
+        line-height: 54px !important;
+        font-size: 30px !important;
+      }
+    }
+
+    /* 태블릿 세로 화면에서는 카드와 지도 안내를 조금 더 넉넉하게 표시 */
+    @media (orientation: portrait) and (min-width: 701px) {
+      .menu-wrap { width: min(700px, 100%); }
+      .mode-card {
+        grid-template-columns: 112px 1fr;
+        column-gap: 22px;
+        padding: 28px;
+      }
+      .mode-icon {
+        width: 108px;
+        height: 108px;
+        font-size: 58px;
+        border-radius: 28px;
+      }
+      .mode-card p { font-size: 17px; }
+
+      .topbar {
+        grid-template-columns: 68px minmax(0, 1fr) 68px;
+        padding-right: 18px;
+        padding-left: 18px;
+      }
+
+      .home-btn,
+      .reset-btn {
+        width: 68px;
+      }
+
+      #missionText { font-size: 30px; }
+      .stat-chip strong { font-size: 22px; }
+      #feedbackText { font-size: 18px; }
+    }
+  </style>
+</head>
+
+<body>
+  <section id="loadingScreen" class="screen active" aria-live="polite">
+    <div class="loading-card">
+      <div id="spinner" class="spinner"></div>
+      <h1>세계지도를 준비하고 있어요</h1>
+      <p id="loadingMessage">국가 경계 데이터를 불러오는 중입니다…</p>
+    </div>
+  </section>
+
+  <main id="menuScreen" class="screen">
+    <div class="menu-wrap">
+      <p class="eyebrow">WORLD MAP LEARNING</p>
+      <h1 class="main-title" aria-label="ㅅㅈㅋㅋ">
+        <span class="title-rest">ㅅㅈ</span><span class="title-pop">ㅋㅋ</span>
+      </h1>
+      <p class="main-desc">세계지도 콕콕! 교과서 속 여러 나라를 지도에서 찾아 익히고 도전해 보세요.</p>
+
+      <div class="mode-grid">
+        <button class="mode-card" type="button" onclick="startLearning()">
+          <span class="mode-icon" aria-hidden="true">🔍</span>
+          <span class="mode-number">01</span>
+          <h2>학습하기</h2>
+          <p>세계지도의 국가를 자유롭게 클릭하며 위치와 국가명을 학습합니다.</p>
+        </button>
+
+        <button class="mode-card challenge" type="button" onclick="startChallenge()">
+          <span class="mode-icon" aria-hidden="true">🎯</span>
+          <span class="mode-number">02</span>
+          <h2>도전하기</h2>
+          <p>무작위로 제시되는 10개 국가를 백지도에서 찾아 클릭하고 점수를 확인합니다.</p>
+        </button>
+      </div>
+
+      <footer class="menu-footer">
+        <span>© 2026 이인규 선생님(덕계중)</span>
+        <a
+          class="feedback-mail"
+          href="mailto:cloveronme@gmail.com?subject=%EC%84%B8%EA%B3%84%20%EA%B5%AD%EA%B0%80%20%EC%9C%84%EC%B9%98%20%EA%B2%8C%EC%9E%84%20%EC%9D%98%EA%B2%AC"
+        >✉ 개발자에게 의견 보내기</a>
+      </footer>
+    </div>
+  </main>
+
+  <section id="gameScreen" class="screen">
+    <header class="topbar">
+      <button class="home-btn" type="button" onclick="goHome()">⌂ 메인</button>
+
+      <div class="mission">
+        <p id="modeLabel">학습하기</p>
+        <p id="missionText">학습할 국가를 클릭해 보세요.</p>
+      </div>
+
+      <button class="reset-btn" type="button" onclick="resetMapView()">◎ 전체 보기</button>
+
+      <div id="stats" class="stats" aria-label="도전 현황">
+        <div class="stat-chip"><span>문제</span><strong id="questionStat">1/10</strong></div>
+        <div class="stat-chip"><span>점수</span><strong id="scoreStat">0</strong></div>
+        <div class="stat-chip"><span>오답</span><strong id="wrongStat">0</strong></div>
+      </div>
+    </header>
+
+    <div id="map" aria-label="세계 백지도"></div>
+
+    <div class="info-panel" aria-live="polite">
+      <p id="feedbackText">지도를 확대하거나 축소하며 국가를 살펴보세요.</p>
+    </div>
+
+    <div id="toast" class="toast" aria-live="assertive">정답입니다!</div>
+  </section>
+
+  <section id="resultScreen" class="screen">
+    <div class="result-card">
+      <div id="resultEmoji" class="result-emoji" aria-hidden="true">🎉</div>
+      <h2>도전 완료!</h2>
+      <p id="resultMessage">10개 국가의 위치를 모두 찾았습니다.</p>
+
+      <div class="score-number">
+        <span id="finalScore">0</span><small> / 100점</small>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-box">
+          <span>찾은 국가</span>
+          <strong id="finalCorrect">10개</strong>
+        </div>
+        <div class="result-box">
+          <span>오답 클릭</span>
+          <strong id="finalWrong">0회</strong>
+        </div>
+      </div>
+
+      <div class="result-actions">
+        <button class="primary-btn" type="button" onclick="startChallenge()">다시 도전하기</button>
+        <button class="secondary-btn" type="button" onclick="goHome()">메인으로</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    const QUESTION_COUNT = 10;
+    const MAX_POINTS_PER_QUESTION = 10;
+    const WRONG_PENALTY = 2;
+    const MIN_POINTS_PER_QUESTION = 2;
+
+    let geoData = null;
+    let quizCountries = [];
+    let map = null;
+    let geoLayer = null;
+    let worldBounds = null;
+    let currentMode = null;
+    let selectedLearningLayer = null;
+    let flashingLayers = new WeakSet();
+
+    let questions = [];
+    let questionIndex = 0;
+    let currentTarget = null;
+    let questionWrongCount = 0;
+    let totalWrongCount = 0;
+    let score = 0;
+    let answerLocked = false;
+    let nextQuestionTimer = null;
+
+    window.addEventListener('DOMContentLoaded', loadGeoData);
+
+    function loadGeoData() {
+      fetch('./world_game.geojson')
+        .then(function(response) {
+          if (!response.ok) {
+            throw new Error('지도 파일을 찾을 수 없습니다. (HTTP ' + response.status + ')');
+          }
+          return response.text();
+        })
+        .then(handleGeoDataSuccess)
+        .catch(handleGeoDataFailure);
+    }
+
+    function handleGeoDataSuccess(geoJsonText) {
+      try {
+        geoData = JSON.parse(geoJsonText);
+        quizCountries = geoData.features.filter(function(feature) {
+          return feature.properties && feature.properties.quizEnabled === true;
+        });
+
+        if (quizCountries.length !== 68) {
+          throw new Error('출제 대상 국가가 68개가 아닙니다. 현재: ' + quizCountries.length + '개');
+        }
+
+        showScreen('menuScreen');
+      } catch (error) {
+        handleGeoDataFailure(error);
+      }
+    }
+
+    function handleGeoDataFailure(error) {
+      const spinner = document.getElementById('spinner');
+      const message = document.getElementById('loadingMessage');
+      spinner.style.display = 'none';
+      message.textContent = '지도 데이터를 불러오지 못했습니다: ' + (error.message || error);
+      message.className = 'error';
+      console.error(error);
+    }
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(function(screen) {
+        screen.classList.toggle('active', screen.id === screenId);
+      });
+    }
+
+    function ensureMap() {
+      if (!map) {
+        map = L.map('map', {
+          minZoom: 1,
+          maxZoom: 10,
+          zoomControl: true,
+          worldCopyJump: false,
+          maxBoundsViscosity: 0.75
+        });
+
+        geoLayer = L.geoJSON(geoData, {
+          style: getBaseStyle,
+          onEachFeature: function(feature, layer) {
+            layer.on({
+              mouseover: function() { handleMouseOver(feature, layer); },
+              mouseout: function() { handleMouseOut(feature, layer); },
+              click: function() { handleCountryClick(feature, layer); }
+            });
+          }
+        }).addTo(map);
+
+        worldBounds = geoLayer.getBounds();
+      }
+
+      setTimeout(function() {
+        map.invalidateSize();
+        resetMapView();
+      }, 80);
+    }
+
+    function getBaseStyle(feature) {
+      const isQuizCountry = feature.properties.quizEnabled === true;
+
+      return {
+        color: '#607d8b',
+        weight: 0.75,
+        fillColor: isQuizCountry ? '#f8fbfd' : '#e9eef1',
+        fillOpacity: 1
+      };
+    }
+
+    function handleMouseOver(feature, layer) {
+      if (answerLocked || flashingLayers.has(layer)) return;
+
+      layer.setStyle({
+        color: '#1f4e78',
+        weight: 1.7
+      });
+    }
+
+    function handleMouseOut(feature, layer) {
+      if (answerLocked || flashingLayers.has(layer)) return;
+      if (currentMode === 'learning' && layer === selectedLearningLayer) return;
+
+      layer.setStyle(getBaseStyle(feature));
+    }
+
+    function handleCountryClick(feature, layer) {
+      if (answerLocked) return;
+
+      if (currentMode === 'learning') {
+        handleLearningClick(feature, layer);
+      } else if (currentMode === 'challenge') {
+        handleChallengeClick(feature, layer);
+      }
+    }
+
+    function startLearning() {
+      clearNextQuestionTimer();
+      currentMode = 'learning';
+      answerLocked = false;
+      selectedLearningLayer = null;
+
+      showScreen('gameScreen');
+      document.getElementById('modeLabel').textContent = '학습하기';
+      document.getElementById('missionText').textContent = '학습할 국가를 클릭해 보세요.';
+      document.getElementById('stats').classList.remove('show');
+      setFeedback('지도를 확대하거나 축소하며 국가를 살펴보세요.', '');
+
+      ensureMap();
+      resetAllCountryStyles();
+    }
+
+    function handleLearningClick(feature, layer) {
+      if (selectedLearningLayer) {
+        const oldFeature = selectedLearningLayer.feature;
+        selectedLearningLayer.setStyle(getBaseStyle(oldFeature));
+      }
+
+      selectedLearningLayer = layer;
+      layer.setStyle({
+        color: '#c97900',
+        weight: 2,
+        fillColor: '#ffd180',
+        fillOpacity: 1
+      });
+      layer.bringToFront();
+
+      const p = feature.properties;
+      const name = p.nameKo || p.nameEn || '이름 미확인';
+      const detail = p.continent ? name + ' · ' + p.continent : name;
+
+      setFeedback(detail, '');
+    }
+
+    function startChallenge() {
+      clearNextQuestionTimer();
+      currentMode = 'challenge';
+      answerLocked = false;
+      selectedLearningLayer = null;
+      questionIndex = 0;
+      questionWrongCount = 0;
+      totalWrongCount = 0;
+      score = 0;
+      questions = shuffleArray(quizCountries.slice()).slice(0, QUESTION_COUNT);
+
+      showScreen('gameScreen');
+      document.getElementById('modeLabel').textContent = '도전하기';
+      document.getElementById('stats').classList.add('show');
+
+      ensureMap();
+      showQuestion();
+    }
+
+    function showQuestion() {
+      answerLocked = false;
+      questionWrongCount = 0;
+      currentTarget = questions[questionIndex];
+
+      resetAllCountryStyles();
+      resetMapView();
+      updateStats();
+
+      const targetName = currentTarget.properties.nameKo;
+      renderChallengeMission(targetName);
+      setFeedback('지도를 직접 확대하거나 이동하여 정답 국가를 클릭하세요.', '');
+    }
+
+    function renderChallengeMission(targetName) {
+      const mission = document.getElementById('missionText');
+      const country = document.createElement('span');
+      country.className = 'target-country';
+      country.textContent = targetName;
+
+      mission.replaceChildren(
+        country,
+        document.createTextNode(getObjectParticle(targetName) + ' 지도에서 찾아보세요!')
+      );
+    }
+
+    function getObjectParticle(word) {
+      const hangulCharacters = word.match(/[가-힣]/g);
+      if (!hangulCharacters || hangulCharacters.length === 0) return '을(를)';
+
+      const lastCharacter = hangulCharacters[hangulCharacters.length - 1];
+      const hasFinalConsonant = (lastCharacter.charCodeAt(0) - 0xAC00) % 28 !== 0;
+      return hasFinalConsonant ? '을' : '를';
+    }
+
+    function getTopicParticle(word) {
+      const hangulCharacters = word.match(/[가-힣]/g);
+      if (!hangulCharacters || hangulCharacters.length === 0) return '은(는)';
+
+      const lastCharacter = hangulCharacters[hangulCharacters.length - 1];
+      const hasFinalConsonant = (lastCharacter.charCodeAt(0) - 0xAC00) % 28 !== 0;
+      return hasFinalConsonant ? '은' : '는';
+    }
+
+    function handleChallengeClick(feature, layer) {
+      const clickedCode = feature.properties.code;
+      const targetCode = currentTarget.properties.code;
+
+      if (clickedCode === targetCode) {
+        handleCorrectAnswer(feature, layer);
+      } else {
+        handleWrongAnswer(feature, layer);
+      }
+    }
+
+    function handleCorrectAnswer(feature, layer) {
+      answerLocked = true;
+
+      const earnedPoints = Math.max(
+        MIN_POINTS_PER_QUESTION,
+        MAX_POINTS_PER_QUESTION - questionWrongCount * WRONG_PENALTY
+      );
+
+      score += earnedPoints;
+      updateStats();
+
+      layer.setStyle({
+        color: '#146b3a',
+        weight: 2.5,
+        fillColor: '#65c889',
+        fillOpacity: 1
+      });
+      layer.bringToFront();
+
+      setFeedback('정답입니다! +' + earnedPoints + '점', 'success');
+      showToast('정답! +' + earnedPoints + '점');
+
+      nextQuestionTimer = setTimeout(function() {
+        questionIndex += 1;
+
+        if (questionIndex >= QUESTION_COUNT) {
+          finishChallenge();
+        } else {
+          showQuestion();
+        }
+      }, 1100);
+    }
+
+    function handleWrongAnswer(feature, layer) {
+      questionWrongCount += 1;
+      totalWrongCount += 1;
+      updateStats();
+
+      const clickedName = feature.properties.nameKo || feature.properties.nameEn || '이 국가';
+      setFeedback(
+        clickedName + getTopicParticle(clickedName) + ' 정답이 아닙니다. 다시 찾아보세요!',
+        'error'
+      );
+
+      flashingLayers.add(layer);
+      layer.setStyle({
+        color: '#a92525',
+        weight: 2.3,
+        fillColor: '#ef7676',
+        fillOpacity: 1
+      });
+      layer.bringToFront();
+
+      setTimeout(function() {
+        flashingLayers.delete(layer);
+        if (!answerLocked) layer.setStyle(getBaseStyle(feature));
+      }, 520);
+    }
+
+    function updateStats() {
+      document.getElementById('questionStat').textContent =
+        Math.min(questionIndex + 1, QUESTION_COUNT) + '/' + QUESTION_COUNT;
+      document.getElementById('scoreStat').textContent = score;
+      document.getElementById('wrongStat').textContent = totalWrongCount;
+    }
+
+    function finishChallenge() {
+      answerLocked = true;
+      currentMode = null;
+
+      document.getElementById('finalScore').textContent = score;
+      document.getElementById('finalCorrect').textContent = QUESTION_COUNT + '개';
+      document.getElementById('finalWrong').textContent = totalWrongCount + '회';
+
+      let emoji = '🎉';
+      let message = '10개 국가의 위치를 모두 찾았습니다.';
+
+      if (score === 100) {
+        emoji = '🏆';
+        message = '완벽합니다! 모든 국가를 한 번에 찾았어요.';
+      } else if (score >= 80) {
+        emoji = '🌟';
+        message = '훌륭합니다! 세계 여러 국가의 위치를 잘 알고 있어요.';
+      } else if (score >= 60) {
+        emoji = '👏';
+        message = '잘했어요! 학습하기에서 조금 더 살펴보면 더 좋아질 거예요.';
+      } else {
+        emoji = '🗺️';
+        message = '괜찮아요! 학습하기에서 위치를 익힌 뒤 다시 도전해 보세요.';
+      }
+
+      document.getElementById('resultEmoji').textContent = emoji;
+      document.getElementById('resultMessage').textContent = message;
+      showScreen('resultScreen');
+    }
+
+    function resetAllCountryStyles() {
+      if (!geoLayer) return;
+      selectedLearningLayer = null;
+
+      geoLayer.eachLayer(function(layer) {
+        layer.setStyle(getBaseStyle(layer.feature));
+      });
+    }
+
+    function resetMapView() {
+      if (!map || !worldBounds) return;
+
+      if (window.matchMedia('(orientation: portrait)').matches) {
+        // 세로 화면에서는 세계지도의 세로 길이가 지도 영역을 채우도록 맞춥니다.
+        // 동서 끝은 화면 밖으로 나갈 수 있으며 좌우 이동으로 확인할 수 있습니다.
+        const portraitZoom = map.getBoundsZoom(worldBounds, true, [16, 16]);
+        map.setView(worldBounds.getCenter(), portraitZoom, { animate: false });
+      } else {
+        // 가로 화면에서는 세계지도의 전체 가로폭이 한눈에 들어오도록 맞춥니다.
+        map.fitBounds(worldBounds, { padding: [8, 8], animate: false });
+      }
+    }
+
+    function setFeedback(message, type) {
+      const feedback = document.getElementById('feedbackText');
+      feedback.textContent = message;
+      feedback.className = '';
+
+      if (type === 'success') feedback.classList.add('feedback-success');
+      if (type === 'error') feedback.classList.add('feedback-error');
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+
+      setTimeout(function() {
+        toast.classList.remove('show');
+      }, 850);
+    }
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+      }
+      return array;
+    }
+
+    function clearNextQuestionTimer() {
+      if (nextQuestionTimer) {
+        clearTimeout(nextQuestionTimer);
+        nextQuestionTimer = null;
+      }
+    }
+
+    function goHome() {
+      clearNextQuestionTimer();
+      answerLocked = false;
+      currentMode = null;
+      currentTarget = null;
+      resetAllCountryStyles();
+      showScreen('menuScreen');
+    }
+
+    window.addEventListener('resize', function() {
+      if (map) map.invalidateSize();
+    });
+
+    window.addEventListener('orientationchange', function() {
+      setTimeout(function() {
+        if (!map) return;
+        map.invalidateSize();
+        resetMapView();
+      }, 300);
+    });
+  </script>
+</body>
+</html>
